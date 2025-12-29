@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { GameModeType, GameState, StudentProfile, GameResult, Question } from '../../types';
 import GameLobby from './GameLobby';
 import PreGameSetup from './PreGameSetup';
 import ResultsView from './ResultsView';
 
-// Game Imports (Relative to games/components)
+// Standard Game Imports
 import RaceToTop from '../RaceToTop';
 import TowerDefense from '../TowerDefense';
 import BossBattle from '../BossBattle';
@@ -16,7 +17,7 @@ import Catcher from '../Catcher';
 import TimerRace from '../TimerRace';
 import PenaltyKick from '../PenaltyKick';
 
-// New Game Imports
+// New Game Imports - Ensuring case sensitivity matches filenames
 import NinjaSlice from '../../newgames/NinjaSlice';
 import TreasureDiver from '../../newgames/TreasureDiver';
 import RocketLaunch from '../../newgames/RocketLaunch';
@@ -70,33 +71,68 @@ const App: React.FC = () => {
   const renderGame = () => {
     if (!student || !selectedGame) return null;
 
-    const commonProps = {
+    // Base props required by most games
+    const baseProps = {
       student: student,
       onGameOver: handleGameOver,
       customQuestions: customQuestions,
-      onExit: handleHome
+      onExit: handleHome,
+      onBack: handleHome // Added for compatibility
     };
 
     switch (selectedGame) {
-      case 'RACE_TRACK': return <RaceTrack {...commonProps} />;
-      case 'NINJA_SLICE': return <NinjaSlice {...commonProps} />;
-      case 'MAZE_ESCAPE': return <MazeEscape {...commonProps} />;
-      case 'TREASURE_DIVER': return <TreasureDiver {...commonProps} />;
-      case 'ROCKET_LAUNCH': return <RocketLaunch {...commonProps} />;
-      case 'DRAGON_TRAINER': return <DragonTrainer {...commonProps} />;
-      case 'ZOO_BUILDER': return <ZooBuilder {...commonProps} />;
-      case 'GHOST_HUNT': return <GhostHunting {...commonProps} />;
-      case 'GARDEN_GROWER': return <GardenGame {...commonProps} />;
-      case 'COOKING_MASTER': return <CookingGame {...commonProps} />;
-      case 'JIGSAW_REVEAL': return <JigsawGame {...commonProps} />;
-      case 'DETECTIVE_CASE': return <DetectiveGame {...commonProps} />;
-      case 'MONSTER_ALBUM': return <MonsterGame {...commonProps} />;
-      case 'RACE': return <RaceToTop {...commonProps} />;
-      case 'TOWER': return <TowerDefense {...commonProps} />;
-      case 'BATTLE': return <BossBattle {...commonProps} />;
+      // --- NEW GAMES ---
+      case 'RACE_TRACK': 
+        return <RaceTrack {...baseProps} />;
+      case 'NINJA_SLICE': 
+        return <NinjaSlice {...baseProps} />;
+      case 'MAZE_ESCAPE': 
+        return <MazeEscape {...baseProps} />;
+      case 'TREASURE_DIVER': 
+        return <TreasureDiver {...baseProps} />;
+      case 'ROCKET_LAUNCH': 
+        return <RocketLaunch {...baseProps} />;
+      case 'DRAGON_TRAINER': 
+        return <DragonTrainer {...baseProps} />;
+      case 'ZOO_BUILDER': 
+        return <ZooBuilder {...baseProps} />;
+      case 'GHOST_HUNT': 
+        return <GhostHunting {...baseProps} />;
+      
+      // Simple Games Collection
+      case 'GARDEN_GROWER': 
+        return <GardenGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
+      case 'COOKING_MASTER': 
+        return <CookingGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
+      case 'JIGSAW_REVEAL': 
+        return <JigsawGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
+      case 'DETECTIVE_CASE': 
+        return <DetectiveGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
+      case 'MONSTER_ALBUM': 
+        return <MonsterGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
+
+      // --- ORIGINAL GAMES ---
+      case 'RACE': 
+        return <RaceToTop {...baseProps} />;
+      case 'TOWER': 
+        return <TowerDefense {...baseProps} />;
+      case 'BATTLE': 
+        return <BossBattle {...baseProps} />;
+      case 'BUBBLE': 
+        return <BubblePop {...baseProps} />;
+      case 'TARGET': 
+        return <TargetShooter {...baseProps} />;
+      case 'PENALTY': 
+        return <PenaltyKick {...baseProps} />;
+      case 'MEMORY': 
+        return <MemoryMatch {...baseProps} />;
+      case 'CATCHER': 
+        return <Catcher {...baseProps} />;
+      case 'TIMER': 
+        return <TimerRace {...baseProps} />;
+        
       case 'ARCHER': {
         const questions = customQuestions || getQuestionsForGrade(student.grade);
-        
         return (
             <ArcherAdventure 
                profile={{ 
@@ -121,12 +157,7 @@ const App: React.FC = () => {
             />
         );
       }
-      case 'BUBBLE': return <BubblePop {...commonProps} />;
-      case 'TARGET': return <TargetShooter {...commonProps} />;
-      case 'PENALTY': return <PenaltyKick {...commonProps} />;
-      case 'MEMORY': return <MemoryMatch {...commonProps} />;
-      case 'CATCHER': return <Catcher {...commonProps} />;
-      case 'TIMER': return <TimerRace {...commonProps} />;
+
       default: return (
         <div className="min-h-screen flex items-center justify-center flex-col gap-4 text-center">
           <div className="text-8xl">🏗️</div>
