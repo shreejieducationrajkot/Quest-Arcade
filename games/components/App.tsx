@@ -17,16 +17,16 @@ import Catcher from '../Catcher';
 import TimerRace from '../TimerRace';
 import PenaltyKick from '../PenaltyKick';
 
-// New Game Imports - Ensuring case sensitivity matches filenames
-import NinjaSlice from '../../newgames/NinjaSlice';
-import TreasureDiver from '../../newgames/TreasureDiver';
-import RocketLaunch from '../../newgames/RocketLaunch';
-import DragonTrainer from '../../newgames/DragonTrainer';
-import MazeEscape from '../../newgames/MazeEscape';
-import ZooBuilder from '../../newgames/ZooBuilder';
-import GhostHunting from '../../newgames/GhostHunting';
-import RaceTrack from '../../newgames/RaceTrack';
-import { GardenGame, CookingGame, JigsawGame, DetectiveGame, MonsterGame } from '../../newgames/SimpleGames';
+// New Game Imports - FIXED CASING (NewGames vs newgames)
+import NinjaSlice from '../../NewGames/NinjaSlice';
+import TreasureDiver from '../../NewGames/TreasureDiver';
+import RocketLaunch from '../../NewGames/RocketLaunch';
+import DragonTrainer from '../../NewGames/DragonTrainer';
+import MazeEscape from '../../NewGames/MazeEscape';
+import ZooBuilder from '../../NewGames/ZooBuilder';
+import GhostHunting from '../../NewGames/GhostHunting';
+import RaceTrack from '../../NewGames/RaceTrack';
+import { GardenGame, CookingGame, JigsawGame, DetectiveGame, MonsterGame } from '../../NewGames/SimpleGames';
 
 import { getQuestionsForGrade } from '../../QuestionBank';
 
@@ -71,66 +71,46 @@ const App: React.FC = () => {
   const renderGame = () => {
     if (!student || !selectedGame) return null;
 
-    // Base props required by most games
-    const baseProps = {
+    // Unified Props Object
+    // This ensures onBack and customQuestions are passed to EVERY game that supports them
+    const commonProps = {
       student: student,
       onGameOver: handleGameOver,
-      customQuestions: customQuestions,
       onExit: handleHome,
-      onBack: handleHome // Added for compatibility
+      onBack: handleHome, // Crucial for new games
+      customQuestions: customQuestions,
     };
 
     switch (selectedGame) {
-      // --- NEW GAMES ---
-      case 'RACE_TRACK': 
-        return <RaceTrack {...baseProps} />;
-      case 'NINJA_SLICE': 
-        return <NinjaSlice {...baseProps} />;
-      case 'MAZE_ESCAPE': 
-        return <MazeEscape {...baseProps} />;
-      case 'TREASURE_DIVER': 
-        return <TreasureDiver {...baseProps} />;
-      case 'ROCKET_LAUNCH': 
-        return <RocketLaunch {...baseProps} />;
-      case 'DRAGON_TRAINER': 
-        return <DragonTrainer {...baseProps} />;
-      case 'ZOO_BUILDER': 
-        return <ZooBuilder {...baseProps} />;
-      case 'GHOST_HUNT': 
-        return <GhostHunting {...baseProps} />;
+      // --- NEW GAMES (Case Sensitive Imports) ---
+      case 'RACE_TRACK': return <RaceTrack {...commonProps} />;
+      case 'NINJA_SLICE': return <NinjaSlice {...commonProps} />;
+      case 'MAZE_ESCAPE': return <MazeEscape {...commonProps} />;
+      case 'TREASURE_DIVER': return <TreasureDiver {...commonProps} />;
+      case 'ROCKET_LAUNCH': return <RocketLaunch {...commonProps} />;
+      case 'DRAGON_TRAINER': return <DragonTrainer {...commonProps} />;
+      case 'ZOO_BUILDER': return <ZooBuilder {...commonProps} />;
+      case 'GHOST_HUNT': return <GhostHunting {...commonProps} />;
       
-      // Simple Games Collection
-      case 'GARDEN_GROWER': 
-        return <GardenGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
-      case 'COOKING_MASTER': 
-        return <CookingGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
-      case 'JIGSAW_REVEAL': 
-        return <JigsawGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
-      case 'DETECTIVE_CASE': 
-        return <DetectiveGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
-      case 'MONSTER_ALBUM': 
-        return <MonsterGame student={student} onGameOver={handleGameOver} customQuestions={customQuestions} />;
+      // --- SIMPLE GAMES COLLECTION ---
+      case 'GARDEN_GROWER': return <GardenGame {...commonProps} />;
+      case 'COOKING_MASTER': return <CookingGame {...commonProps} />;
+      case 'JIGSAW_REVEAL': return <JigsawGame {...commonProps} />;
+      case 'DETECTIVE_CASE': return <DetectiveGame {...commonProps} />;
+      case 'MONSTER_ALBUM': return <MonsterGame {...commonProps} />;
 
       // --- ORIGINAL GAMES ---
-      case 'RACE': 
-        return <RaceToTop {...baseProps} />;
-      case 'TOWER': 
-        return <TowerDefense {...baseProps} />;
-      case 'BATTLE': 
-        return <BossBattle {...baseProps} />;
-      case 'BUBBLE': 
-        return <BubblePop {...baseProps} />;
-      case 'TARGET': 
-        return <TargetShooter {...baseProps} />;
-      case 'PENALTY': 
-        return <PenaltyKick {...baseProps} />;
-      case 'MEMORY': 
-        return <MemoryMatch {...baseProps} />;
-      case 'CATCHER': 
-        return <Catcher {...baseProps} />;
-      case 'TIMER': 
-        return <TimerRace {...baseProps} />;
-        
+      case 'RACE': return <RaceToTop {...commonProps} />;
+      case 'TOWER': return <TowerDefense {...commonProps} />;
+      case 'BATTLE': return <BossBattle {...commonProps} />;
+      case 'BUBBLE': return <BubblePop {...commonProps} />;
+      case 'TARGET': return <TargetShooter {...commonProps} />;
+      case 'PENALTY': return <PenaltyKick {...commonProps} />;
+      case 'MEMORY': return <MemoryMatch {...commonProps} />;
+      case 'CATCHER': return <Catcher {...commonProps} />;
+      case 'TIMER': return <TimerRace {...commonProps} />;
+      
+      // Archer has a slightly different prop structure for profile
       case 'ARCHER': {
         const questions = customQuestions || getQuestionsForGrade(student.grade);
         return (
