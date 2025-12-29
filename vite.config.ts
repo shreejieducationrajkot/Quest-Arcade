@@ -1,15 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './'),
+    },
+  },
   build: {
-    // Increase the warning limit to 2000kb (2MB) to stop the annoying warning
     chunkSizeWarningLimit: 2000, 
     rollupOptions: {
       output: {
-        // This splits the code into smaller pieces to load faster
         manualChunks(id) {
           if (id.includes('node_modules')) {
             return 'vendor';

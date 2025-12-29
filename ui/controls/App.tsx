@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { GameModeType, GameState, StudentProfile, GameResult } from '../../types';
 import GameLobby from './GameLobby';
@@ -18,15 +17,15 @@ import TimerRace from '../../games/TimerRace';
 import PenaltyKick from '../../games/PenaltyKick';
 
 // New Game Imports (Fixed relative paths)
-import NinjaSlice from '../../NewGames/NinjaSlice';
-import TreasureDiver from '../../NewGames/TreasureDiver';
-import RocketLaunch from '../../NewGames/RocketLaunch';
-import DragonTrainer from '../../NewGames/DragonTrainer';
-import MazeEscape from '../../NewGames/MazeEscape';
-import ZooBuilder from '../../NewGames/ZooBuilder';
-import GhostHunting from '../../NewGames/GhostHunting';
-import RaceTrack from '../../NewGames/RaceTrack';
-import { GardenGame, CookingGame, JigsawGame, DetectiveGame, MonsterGame } from '../../NewGames/SimpleGames';
+import NinjaSlice from '../../newgames/NinjaSlice';
+import TreasureDiver from '../../newgames/TreasureDiver';
+import RocketLaunch from '../../newgames/RocketLaunch';
+import DragonTrainer from '../../newgames/DragonTrainer';
+import MazeEscape from '../../newgames/MazeEscape';
+import ZooBuilder from '../../newgames/ZooBuilder';
+import GhostHunting from '../../newgames/GhostHunting';
+import RaceTrack from '../../newgames/RaceTrack';
+import { GardenGame, CookingGame, JigsawGame, DetectiveGame, MonsterGame } from '../../newgames/SimpleGames';
 
 import { getQuestionsForGrade } from '../../QuestionBank';
 

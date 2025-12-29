@@ -1,8 +1,7 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './games/components/App';
-import { SoundProvider } from './games/components/SoundManager';
+import App from '@/games/components/App';
+import { SoundProvider } from '@/games/components/SoundManager';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
