@@ -1,7 +1,9 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// ==========================================
+// 🚫 AI DISABLED - MOCK SERVICE
+// This file replaces the Google Gemini API.
+// No API Key is required.
+// ==========================================
 
 export interface DiagnosticAnalysis {
   strengths: string[];
@@ -15,66 +17,52 @@ export const analyzePerformance = async (
   grade: string,
   history: { skill: string; correct: boolean; timeTaken: number }[]
 ): Promise<DiagnosticAnalysis> => {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
-      contents: `You are an expert pedagogical AI Diagnostic Engine with deep expertise in childhood psychology and educational scaffolding.
-      
-      STUDENT PROFILE:
-      - Name: ${name}
-      - Grade Level: ${grade}
-      
-      PERFORMANCE DATA:
-      ${JSON.stringify(history)}
-      
-      ANALYTICAL TASK:
-      1. Deep Thinking Phase: Before providing the answer, reason through the student's error patterns. Are the mistakes due to conceptual misunderstanding, time-pressure anxiety, or specific sub-skill gaps?
-      2. Identify 3 specific sub-skills where the student demonstrated mastery.
-      3. Identify 2 critical areas for focused intervention.
-      4. Craft a specialized 7-day study recommendation plan summarized in one clear sentence.
-      5. Write a highly motivating, age-appropriate encouragement message that references their specific effort.
-      
-      FORMAT REQUIREMENTS:
-      - Return strictly as a JSON object matching the defined schema.
-      - Strengths and weaknesses must be concise (2-4 words each).`,
-      config: {
-        thinkingConfig: { thinkingBudget: 8000 },
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            strengths: { 
-              type: Type.ARRAY, 
-              items: { type: Type.STRING }, 
-              description: "Specific sub-skills where performance was high" 
-            },
-            weaknesses: { 
-              type: Type.ARRAY, 
-              items: { type: Type.STRING }, 
-              description: "Identified learning gaps or anxiety patterns" 
-            },
-            recommendation: { 
-              type: Type.STRING, 
-              description: "Actionable 7-day intervention plan summary" 
-            },
-            encouragement: { 
-              type: Type.STRING, 
-              description: "Motivating psychological reinforcement message" 
-            },
-          },
-          required: ["strengths", "weaknesses", "recommendation", "encouragement"],
-        },
-      },
-    });
+  // Simulate a short "thinking" delay for realism
+  await new Promise(resolve => setTimeout(resolve, 600));
 
-    return JSON.parse(response.text || "{}");
-  } catch (error) {
-    console.error("AI Analysis failed:", error);
-    return {
-      strengths: ["Concept Recognition", "Rapid Response"],
-      weaknesses: ["Complex Reasoning", "Accuracy under Pressure"],
-      recommendation: "Focus on fundamental practice for 10 minutes daily to strengthen conceptual accuracy.",
-      encouragement: "Fantastic effort! Your focus is truly impressive. Keep up the great work!"
-    };
+  const total = history.length;
+  const correctCount = history.filter(h => h.correct).length;
+  // Calculate percentage safely
+  const percentage = total > 0 ? (correctCount / total) * 100 : 0;
+
+  // 1. Identify Strengths (Unique skills from correct answers)
+  const strengthSet = new Set(history.filter(h => h.correct).map(h => h.skill));
+  let strengths = Array.from(strengthSet).slice(0, 3);
+  if (strengths.length === 0) strengths = ["Persistence", "Effort"];
+
+  // 2. Identify Weaknesses (Unique skills from incorrect answers)
+  const weaknessSet = new Set(history.filter(h => !h.correct).map(h => h.skill));
+  let weaknesses = Array.from(weaknessSet).slice(0, 2);
+  if (weaknesses.length === 0) weaknesses = ["None! Perfect run."];
+
+  // 3. Recommendation Logic
+  let recommendation = "";
+  if (percentage >= 90) {
+    recommendation = "You've mastered this! Challenge yourself with the next difficulty level.";
+  } else if (percentage >= 70) {
+    recommendation = "Great work! Review the few missed questions to achieve perfection.";
+  } else if (percentage >= 50) {
+    recommendation = "You're getting there! Focus on accuracy over speed in the next round.";
+  } else {
+    recommendation = "Take your time. Read each question carefully and try again.";
   }
+
+  // 4. Encouragement Logic (Mock AI Persona)
+  let encouragement = "";
+  if (percentage >= 90) {
+    encouragement = `Incredible! You are a Master! 🌟`;
+  } else if (percentage >= 75) {
+    encouragement = `Great job! You have strong skills. 🚀`;
+  } else if (percentage >= 50) {
+    encouragement = `Good effort! Keep practicing! 👍`;
+  } else {
+    encouragement = `Don't give up! Every mistake is a lesson. 💪`;
+  }
+
+  return {
+    strengths,
+    weaknesses,
+    recommendation,
+    encouragement
+  };
 };
