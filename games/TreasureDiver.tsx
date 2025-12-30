@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
-import { useSound } from '../games/components/SoundManager';
+import { useSound } from './components/SoundManager';
 import { Heart, Crosshair, Radar, Activity } from 'lucide-react';
-import { PauseMenu } from '../games/components/PauseMenu';
+import { PauseMenu } from './components/PauseMenu';
 
 // === TYPES & CONSTANTS ===
 interface Creature {

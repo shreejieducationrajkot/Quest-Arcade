@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
-import { useSound } from '../games/components/SoundManager';
+import { useSound } from './components/SoundManager';
 import { Lock, Skull, Footprints, Sparkles } from 'lucide-react';
 
 interface MazeEscapeProps {

@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
-import QuestionOverlay from '../games/components/QuestionOverlay';
+import QuestionOverlay from './components/QuestionOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Circle, Star, Zap } from 'lucide-react';
-import { useSound } from '../games/components/SoundManager';
+import { useSound } from './components/SoundManager';
 
 interface ZooBuilderProps {
   student: StudentProfile;

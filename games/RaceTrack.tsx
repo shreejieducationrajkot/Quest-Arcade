@@ -3,10 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
-import { useSound } from '../games/components/SoundManager';
-import QuestionOverlay from '../games/components/QuestionOverlay';
+import { useSound } from './components/SoundManager';
+import QuestionOverlay from './components/QuestionOverlay';
 import { Flag, Zap, Gauge, Flame, Trophy } from 'lucide-react';
-import { PauseMenu } from '../games/components/PauseMenu';
+import { PauseMenu } from './components/PauseMenu';
 
 interface RaceTrackProps {
   student: StudentProfile;

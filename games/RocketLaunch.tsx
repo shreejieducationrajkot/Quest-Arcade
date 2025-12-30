@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
 import { NEW_GAME_METADATA } from '../constants';
-import QuestionOverlay from '../games/components/QuestionOverlay';
+import QuestionOverlay from './components/QuestionOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PauseMenu } from '../games/components/PauseMenu';
+import { PauseMenu } from './components/PauseMenu';
 
 interface RocketLaunchProps {
   student: StudentProfile;

@@ -17,16 +17,16 @@ import Catcher from '../Catcher';
 import TimerRace from '../TimerRace';
 import PenaltyKick from '../PenaltyKick';
 
-// New Game Imports - FIXED CASING (NewGames vs newgames)
-import NinjaSlice from '../../NewGames/NinjaSlice';
-import TreasureDiver from '../../NewGames/TreasureDiver';
-import RocketLaunch from '../../NewGames/RocketLaunch';
-import DragonTrainer from '../../NewGames/DragonTrainer';
-import MazeEscape from '../../NewGames/MazeEscape';
-import ZooBuilder from '../../NewGames/ZooBuilder';
-import GhostHunting from '../../NewGames/GhostHunting';
-import RaceTrack from '../../NewGames/RaceTrack';
-import { GardenGame, CookingGame, JigsawGame, DetectiveGame, MonsterGame } from '../../NewGames/SimpleGames';
+// New Game Imports
+import NinjaSlice from '../NinjaSlice';
+import TreasureDiver from '../TreasureDiver';
+import RocketLaunch from '../RocketLaunch';
+import DragonTrainer from '../DragonTrainer';
+import MazeEscape from '../MazeEscape';
+import ZooBuilder from '../ZooBuilder';
+import GhostHunting from '../GhostHunting';
+import RaceTrack from '../RaceTrack';
+import { GardenGame, CookingGame, JigsawGame, DetectiveGame, MonsterGame } from '../SimpleGames';
 
 import { getQuestionsForGrade } from '../../QuestionBank';
 
@@ -72,17 +72,16 @@ const App: React.FC = () => {
     if (!student || !selectedGame) return null;
 
     // Unified Props Object
-    // This ensures onBack and customQuestions are passed to EVERY game that supports them
     const commonProps = {
       student: student,
       onGameOver: handleGameOver,
       onExit: handleHome,
-      onBack: handleHome, // Crucial for new games
+      onBack: handleHome,
       customQuestions: customQuestions,
     };
 
     switch (selectedGame) {
-      // --- NEW GAMES (Case Sensitive Imports) ---
+      // --- NEW GAMES ---
       case 'RACE_TRACK': return <RaceTrack {...commonProps} />;
       case 'NINJA_SLICE': return <NinjaSlice {...commonProps} />;
       case 'MAZE_ESCAPE': return <MazeEscape {...commonProps} />;

@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
-import { useSound } from '../games/components/SoundManager';
+import { useSound } from './components/SoundManager';
 import { Star, Zap } from 'lucide-react';
-import { PauseMenu } from '../games/components/PauseMenu';
+import { PauseMenu } from './components/PauseMenu';
 
 // === TYPES ===
 interface FruitData {

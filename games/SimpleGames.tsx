@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
-import QuestionOverlay from '../games/components/QuestionOverlay';
+import QuestionOverlay from './components/QuestionOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sprout, Search, ChefHat, Puzzle, Ghost, CheckCircle } from 'lucide-react';
-import { useSound } from '../games/components/SoundManager';
+import { useSound } from './components/SoundManager';
 
 // === SHARED LOGIC ===
 const useSimpleGameLogic = (student: StudentProfile, onGameOver: (r: GameState) => void, limit: number = 10, customQuestions?: Question[] | null) => {
