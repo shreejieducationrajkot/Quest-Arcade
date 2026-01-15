@@ -132,17 +132,27 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
   }, [isTransitioning, isPaused]);
 
   // 4. Mouse & Collision Logic
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!containerRef.current || isPaused) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let clientX, clientY;
+
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    }
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     setMousePos({ x, y });
 
     // Check Lock-on (Visual only)
     const xPct = (x / rect.width) * 100;
     const yPct = (y / rect.height) * 100;
-    const hovering = creatures.some(c => Math.abs(c.x - xPct) < 5 && Math.abs(c.y - yPct) < 8);
+    const hovering = creatures.some(c => Math.abs(c.x - xPct) < 8 && Math.abs(c.y - yPct) < 12);
     setIsLockedOn(hovering);
   };
 
@@ -157,8 +167,8 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
     const clickYPct = (mousePos.y / container.clientHeight) * 100;
 
     const hitCreature = creatures.find(c => 
-      Math.abs(c.x - clickXPct) < 6 && 
-      Math.abs(c.y - clickYPct) < 8
+      Math.abs(c.x - clickXPct) < 8 && 
+      Math.abs(c.y - clickYPct) < 12
     );
 
     // 2. Trigger Harpoon Animation
@@ -212,8 +222,11 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
     <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
+      onTouchMove={handleMouseMove}
+      onTouchEnd={handleFire}
       onClick={handleFire}
       className="relative w-full h-full overflow-hidden bg-black cursor-none select-none font-mono"
+      style={{ touchAction: 'none' }}
     >
       <PauseMenu 
         onPause={() => setIsPaused(true)}
@@ -241,7 +254,7 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
       {creatures.map((c) => (
         <div 
           key={c.id}
-          className="absolute z-10"
+          className="absolute z-10 pointer-events-none"
           style={{ 
             left: `${c.x}%`, 
             top: `${c.y}%`,
@@ -304,7 +317,7 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
 
               {/* Answer Text Label */}
               <div 
-                className="mt-2 px-3 py-1 bg-black/60 border border-cyan-500/50 rounded text-cyan-100 font-bold text-lg whitespace-nowrap backdrop-blur-sm shadow-[0_0_10px_black]"
+                className="mt-2 px-3 py-1 bg-black/60 border border-cyan-500/50 rounded text-cyan-100 font-bold text-base md:text-lg whitespace-nowrap backdrop-blur-sm shadow-[0_0_10px_black]"
                 style={{ textShadow: `0 0 5px ${c.color}` }}
               >
                 {c.text}
@@ -315,12 +328,12 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
 
 
       {/* === LAYER 3: HUD === */}
-      <div className="absolute inset-0 z-40 pointer-events-none p-6 flex flex-col justify-between">
+      <div className="absolute inset-0 z-40 pointer-events-none p-4 flex flex-col justify-between safe-area-top">
          
          {/* Top HUD */}
          <div className="flex justify-between items-start">
             {/* Radar */}
-            <div className="relative w-32 h-32 bg-black/40 rounded-full border border-green-900 overflow-hidden flex items-center justify-center">
+            <div className="relative w-24 h-24 md:w-32 md:h-32 bg-black/40 rounded-full border border-green-900 overflow-hidden flex items-center justify-center">
                <div className={`absolute inset-0 border-r border-green-500/50 ${sonarPing ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }}></div>
                {creatures.map(c => (
                  <div key={'dot'+c.id} className="absolute w-1 h-1 bg-red-500 rounded-full" style={{ left: `${c.x}%`, top: `${c.y}%` }} />
@@ -329,27 +342,27 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
             </div>
 
             {/* Question Panel */}
-            <div className="bg-black/70 border-x-4 border-cyan-500/50 px-8 py-4 max-w-2xl text-center backdrop-blur-md">
-                <div className="text-cyan-600 text-xs tracking-[0.3em] mb-1">TARGET IDENTIFICATION</div>
-                <h2 className="text-2xl text-white font-bold drop-shadow-[0_0_5px_cyan]">{currentQ.text}</h2>
+            <div className="bg-black/70 border-x-4 border-cyan-500/50 px-6 py-3 max-w-xl text-center backdrop-blur-md mx-2">
+                <div className="text-cyan-600 text-[10px] tracking-[0.3em] mb-1">TARGET ID</div>
+                <h2 className="text-lg md:text-2xl text-white font-bold drop-shadow-[0_0_5px_cyan] leading-tight">{currentQ.text}</h2>
             </div>
 
             {/* Stats */}
             <div className="flex flex-col gap-2 items-end">
-               <div className="flex items-center gap-2 text-cyan-400 font-bold text-xl">
-                  SCORE <span className="bg-cyan-900/30 px-2 rounded border border-cyan-500">{score}</span>
+               <div className="flex items-center gap-2 text-cyan-400 font-bold text-lg">
+                  <span className="hidden md:inline">SCORE</span> <span className="bg-cyan-900/30 px-2 rounded border border-cyan-500">{score}</span>
                </div>
             </div>
          </div>
 
          {/* Bottom Status */}
          <div className="flex justify-center">
-             <div className="flex items-center gap-4 text-green-500/60 text-xs uppercase tracking-widest bg-black/40 px-4 py-1 rounded-full border border-green-900">
-                <Activity size={14} className="animate-pulse" /> Systems Nominal
+             <div className="flex items-center gap-2 md:gap-4 text-green-500/60 text-[10px] md:text-xs uppercase tracking-widest bg-black/40 px-4 py-1 rounded-full border border-green-900">
+                <Activity size={14} className="animate-pulse" /> <span className="hidden md:inline">Systems Nominal</span>
                 <span>|</span>
-                <span>Depth: {(currentIndex+1)*150}m</span>
+                <span>D: {(currentIndex+1)*150}m</span>
                 <span>|</span>
-                <span>Harpoons: ∞</span>
+                <span>∞</span>
              </div>
          </div>
       </div>
@@ -397,8 +410,8 @@ const TreasureDiver: React.FC<TreasureDiverProps> = ({ student, customQuestions,
             className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 pointer-events-none"
           >
              <div className={`border-4 p-8 rounded-2xl bg-black ${result === 'caught' ? 'border-green-500 text-green-400' : 'border-red-500 text-red-500'}`}>
-                <h1 className="text-6xl font-black tracking-tighter drop-shadow-[0_0_20px_currentColor]">
-                   {result === 'caught' ? 'TARGET CAPTURED' : 'SIGNAL LOST'}
+                <h1 className="text-4xl md:text-6xl font-black tracking-tighter drop-shadow-[0_0_20px_currentColor] text-center">
+                   {result === 'caught' ? 'CAPTURED' : 'MISSED'}
                 </h1>
                 <div className="h-1 bg-current w-full mt-4 animate-pulse"></div>
              </div>

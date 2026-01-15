@@ -9,12 +9,14 @@ const __dirname = dirname(__filename);
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/', // Ensure absolute path for Vercel to prevent white screen on refresh
   resolve: {
     alias: {
       '@': resolve(__dirname, './'),
     },
   },
   build: {
+    outDir: 'dist',
     chunkSizeWarningLimit: 2000, 
     rollupOptions: {
       output: {

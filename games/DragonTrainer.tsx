@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { GameState, StudentProfile, Question } from '../types';
 import { getQuestionsForGrade } from '../QuestionBank';
 import { useSound } from './components/SoundManager';
-import { Shield, Zap } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { PauseMenu } from './components/PauseMenu';
 
 // === TYPES ===
@@ -42,30 +42,25 @@ interface DragonTrainerProps {
   onExit?: () => void;
 }
 
-const MotionG = motion.g as any;
 const MotionPath = motion.path as any;
 const MotionEllipse = motion.ellipse as any;
 const MotionCircle = motion.circle as any;
 const MotionDiv = motion.div as any;
+const MotionG = motion.g as any;
 
-// === NEW: 3D FLYING DRAGON COMPONENT ===
+// === 3D FLYING DRAGON COMPONENT ===
 const FlyingDragon = ({ state }: { state: 'fly' | 'shoot' | 'hurt' | 'happy' }) => {
   return (
     <svg viewBox="0 0 200 160" className="w-full h-full overflow-visible drop-shadow-2xl">
       <defs>
-        {/* 3D Body Gradient */}
         <radialGradient id="redBody" cx="40%" cy="30%" r="80%">
-          <stop offset="0%" stopColor="#ef4444" /> {/* Bright Red */}
-          <stop offset="100%" stopColor="#7f1d1d" /> {/* Dark Red Shadow */}
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#7f1d1d" />
         </radialGradient>
-        
-        {/* 3D Belly Gradient */}
         <linearGradient id="yellowBelly" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#fcd34d" />
           <stop offset="100%" stopColor="#d97706" />
         </linearGradient>
-
-        {/* Wing Gradient */}
         <linearGradient id="wing" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#fbbf24" />
           <stop offset="50%" stopColor="#d97706" />
@@ -77,7 +72,7 @@ const FlyingDragon = ({ state }: { state: 'fly' | 'shoot' | 'hurt' | 'happy' }) 
         animate={state === 'hurt' ? { x: [-5, 5, -5, 5, 0], rotate: [0, 10, -10, 0] } : { y: [0, -8, 0] }}
         transition={state === 'hurt' ? { duration: 0.4 } : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >
-        {/* --- BACK WING --- */}
+        {/* Back Wing */}
         <MotionPath 
           d="M70,70 Q40,30 90,20 L100,60 Z" 
           fill="url(#wing)" stroke="#78350f" strokeWidth="2"
@@ -86,39 +81,31 @@ const FlyingDragon = ({ state }: { state: 'fly' | 'shoot' | 'hurt' | 'happy' }) 
           transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* --- TAIL --- */}
+        {/* Tail */}
         <path d="M40,90 Q20,100 5,80 L15,95 Q30,110 50,100 Z" fill="url(#redBody)" stroke="#7f1d1d" strokeWidth="2" />
-        <path d="M10,80 L20,85 L15,75 Z" fill="#fcd34d" /> {/* Tail Spike */}
+        <path d="M10,80 L20,85 L15,75 Z" fill="#fcd34d" />
 
-        {/* --- BODY (Flying Posture) --- */}
+        {/* Body */}
         <ellipse cx="80" cy="90" rx="45" ry="35" fill="url(#redBody)" stroke="#7f1d1d" strokeWidth="2" />
-        
-        {/* Belly Scales */}
         <path d="M50,105 Q80,125 110,100" fill="none" stroke="#fcd34d" strokeWidth="12" strokeLinecap="round" opacity="0.9" />
         <path d="M50,105 Q80,125 110,100" fill="none" stroke="#d97706" strokeWidth="2" strokeDasharray="10 10" opacity="0.5" />
 
-        {/* --- LEGS (Tucked Back) --- */}
+        {/* Legs */}
         <ellipse cx="60" cy="115" rx="15" ry="10" fill="url(#redBody)" stroke="#7f1d1d" strokeWidth="2" transform="rotate(20 60 115)" />
-        <path d="M50,120 L45,125 L55,125 Z" fill="#fff" /> {/* Claws */}
+        <path d="M50,120 L45,125 L55,125 Z" fill="#fff" />
 
-        {/* --- HEAD --- */}
+        {/* Head */}
         <g transform={state === 'shoot' ? "translate(5, 0) rotate(-5 110 70)" : ""}>
             <circle cx="110" cy="70" r="35" fill="url(#redBody)" stroke="#7f1d1d" strokeWidth="2" />
-            
-            {/* Snout */}
             <ellipse cx="135" cy="80" rx="20" ry="18" fill="url(#redBody)" stroke="#7f1d1d" strokeWidth="2" />
-            <circle cx="145" cy="75" r="2" fill="black" opacity="0.6" /> {/* Nostril */}
-
-            {/* Horns */}
+            <circle cx="145" cy="75" r="2" fill="black" opacity="0.6" />
             <path d="M90,45 L80,25 L100,40" fill="#fff" stroke="#d97706" strokeWidth="2" />
             <path d="M110,35 L115,15 L125,35" fill="#fff" stroke="#d97706" strokeWidth="2" />
 
-            {/* EYE (Big Cute) */}
             <g transform="translate(105, 60)">
                <ellipse cx="0" cy="0" rx="12" ry="14" fill="white" stroke="#7f1d1d" strokeWidth="2" />
                <ellipse cx="2" cy="0" rx="7" ry="9" fill="black" />
                <circle cx="5" cy="-4" r="3" fill="white" />
-               {/* Blink Animation */}
                <MotionEllipse 
                  cx="0" cy="0" rx="12" ry="14" fill="#ef4444" 
                  animate={{ scaleY: [0, 0, 0, 1, 0] }}
@@ -126,16 +113,14 @@ const FlyingDragon = ({ state }: { state: 'fly' | 'shoot' | 'hurt' | 'happy' }) 
                />
             </g>
 
-            {/* Mouth */}
             <path d={state === 'shoot' ? "M130,90 Q140,105 150,90" : "M130,90 Q140,95 150,90"} stroke="#500724" strokeWidth="2" fill="none" />
             
-            {/* Fire Particle (Mouth) */}
             {state === 'shoot' && (
                 <MotionCircle cx="150" cy="90" r="10" fill="orange" initial={{scale:0}} animate={{scale:1.5, opacity: 0}} />
             )}
         </g>
 
-        {/* --- FRONT WING --- */}
+        {/* Front Wing */}
         <MotionPath 
           d="M80,80 Q50,20 120,10 L130,50 Z" 
           fill="url(#wing)" stroke="#78350f" strokeWidth="2"
@@ -143,12 +128,10 @@ const FlyingDragon = ({ state }: { state: 'fly' | 'shoot' | 'hurt' | 'happy' }) 
           animate={{ rotate: [-10, 30, -10] }}
           transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0.1 }}
         />
-
       </MotionG>
     </svg>
   );
 };
-
 
 // === MAIN GAME COMPONENT ===
 const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions, onGameOver, onExit }) => {
@@ -269,19 +252,34 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
     return () => cancelAnimationFrame(frameId);
   }, [questions, currentIndex, isPaused]);
 
-  // 4. Mouse Tracking
-  const handleMouseMove = (e: React.MouseEvent) => {
+  // 4. Unified Input Handling (Touch & Mouse)
+  const handleInputMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!containerRef.current || isPaused) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setDragonY(prev => prev + (y - prev) * 0.2);
+    let clientY;
+
+    if ('touches' in e) {
+      clientY = e.touches[0].clientY;
+    } else {
+      clientY = (e as React.MouseEvent).clientY;
+    }
+
+    const relativeY = clientY - rect.top;
+    const yPercent = (relativeY / rect.height) * 100;
+    const clampedY = Math.max(0, Math.min(100, yPercent));
+    
+    // Smooth movement
+    setDragonY(prev => prev + (clampedY - prev) * 0.2);
   };
 
-  // 5. Interaction
-  const handleShoot = () => {
+  const handleInputStart = (e: React.MouseEvent | React.TouchEvent) => {
     if (isPaused) return;
+    
+    // Update position on touch start for instant responsiveness
+    handleInputMove(e);
+    
     setDragonState('shoot');
-    playSound('click');
+    playSound('shoot');
     setTimeout(() => setDragonState('fly'), 300);
 
     const type = streak > 2 ? 'plasma' : 'fire';
@@ -312,7 +310,6 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
         setStreak(0);
     }
 
-    // INSTANT NEXT LEVEL
     setTimeout(() => {
         setDragonState('fly');
         if (currentIndex + 1 >= questions.length) {
@@ -340,9 +337,12 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
   return (
     <div 
       ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseDown={handleShoot}
-      className="relative w-full h-full overflow-hidden bg-[#60a5fa] cursor-crosshair select-none font-sans"
+      onMouseMove={handleInputMove}
+      onTouchMove={handleInputMove}
+      onMouseDown={handleInputStart}
+      onTouchStart={handleInputStart}
+      className="relative w-full h-full overflow-hidden bg-[#60a5fa] cursor-crosshair select-none font-sans touch-none"
+      style={{ touchAction: 'none' }}
     >
       <PauseMenu 
         onPause={() => setIsPaused(true)}
@@ -361,16 +361,16 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
       </div>
 
       {/* HUD */}
-      <div className="absolute top-0 left-0 right-0 p-6 z-50 flex justify-between items-start pointer-events-none">
-         <div className="flex-1 flex justify-center">
-             <div className="relative bg-[#7f1d1d] border-4 border-[#fbbf24] px-8 py-3 rounded-full shadow-2xl max-w-2xl text-center">
-                 <h2 className="text-xl md:text-2xl font-black text-white relative z-10 drop-shadow-md">
+      <div className="absolute top-0 left-0 right-0 p-4 md:p-6 z-50 flex justify-between items-start pointer-events-none safe-area-top">
+         <div className="flex-1 flex justify-center px-8 md:px-0">
+             <div className="relative bg-[#7f1d1d] border-4 border-[#fbbf24] px-4 py-2 md:px-8 md:py-3 rounded-full shadow-2xl w-full max-w-2xl text-center">
+                 <h2 className="text-sm md:text-2xl font-black text-white relative z-10 drop-shadow-md leading-tight">
                     {currentQ.text}
                  </h2>
              </div>
          </div>
-         <div className="absolute right-6 top-6 flex flex-col items-end gap-2">
-             <div className="flex items-center gap-2 bg-black/60 px-4 py-1 rounded-full border border-white/20 text-white font-mono">
+         <div className="absolute right-4 top-4 md:right-6 md:top-6 flex flex-col items-end gap-2">
+             <div className="flex items-center gap-2 bg-black/60 px-3 py-1 rounded-full border border-white/20 text-white font-mono text-sm md:text-base">
                  <Shield size={16} className="text-blue-400" />
                  <span>{score}</span>
              </div>
@@ -379,15 +379,15 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
 
       {/* 3D DRAGON */}
       <MotionDiv 
-        className="absolute left-[2%] w-48 h-48 z-40"
-        style={{ top: `${dragonY}%`, marginTop: '-96px' }}
+        className="absolute left-[2%] w-24 h-24 md:w-48 md:h-48 z-40 pointer-events-none"
+        style={{ top: `${dragonY}%`, marginTop: '-64px' }} 
       >
          <FlyingDragon state={dragonState} />
       </MotionDiv>
 
       {/* PROJECTILES */}
       {projectiles.map(p => (
-          <div key={p.id} className="absolute w-12 h-8 z-30" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+          <div key={p.id} className="absolute w-8 h-5 md:w-12 md:h-8 z-30 pointer-events-none" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
              <div className={`w-full h-full rounded-full blur-sm ${p.type === 'plasma' ? 'bg-cyan-400 box-shadow-[0_0_15px_cyan]' : 'bg-orange-500 box-shadow-[0_0_10px_orange]'}`}></div>
              <div className="absolute inset-2 bg-white rounded-full scale-y-50"></div>
           </div>
@@ -399,7 +399,7 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
          return (
             <MotionDiv
                key={t.id}
-               className="absolute z-20 w-40 h-28 flex items-center justify-center"
+               className="absolute z-20 w-24 h-16 md:w-40 md:h-28 flex items-center justify-center pointer-events-none"
                style={{ left: `${t.x}%`, top: `${t.y}%` }}
                animate={{ rotate: [t.rotation, t.rotation + 5, t.rotation] }}
                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -407,8 +407,8 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
                <div className="relative w-full h-full transform scale-90">
                    <div className="absolute inset-0 bg-[#57534e] rounded-[40%_60%_70%_30%_/_40%_50%_60%_50%] shadow-xl border-b-8 border-[#292524]"></div>
                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-[#4ade80] rounded-t-xl border-b-4 border-[#16a34a]"></div>
-                   <div className="absolute inset-0 flex items-center justify-center pb-2">
-                       <span className="font-black text-[#1e293b] text-xl drop-shadow-sm bg-white/90 px-3 py-1 rounded-lg">
+                   <div className="absolute inset-0 flex items-center justify-center pb-2 px-2">
+                       <span className="font-black text-[#1e293b] text-xs md:text-xl drop-shadow-sm bg-white/90 px-2 py-1 rounded-lg text-center leading-tight">
                            {t.text}
                        </span>
                    </div>
@@ -419,7 +419,7 @@ const DragonTrainer: React.FC<DragonTrainerProps> = ({ student, customQuestions,
 
       {/* PARTICLES */}
       {particles.map(p => (
-          <div key={p.id} className="absolute w-3 h-3 rounded-md z-30" style={{ left: `${p.x}%`, top: `${p.y}%`, backgroundColor: p.color, boxShadow: `0 0 10px ${p.color}` }} />
+          <div key={p.id} className="absolute w-2 h-2 md:w-3 md:h-3 rounded-md z-30 pointer-events-none" style={{ left: `${p.x}%`, top: `${p.y}%`, backgroundColor: p.color, boxShadow: `0 0 10px ${p.color}` }} />
       ))}
 
     </div>

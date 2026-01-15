@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
 import { GameModeType, GameState, StudentProfile, GameResult, Question } from '../../types';
 import GameLobby from './GameLobby';
 import PreGameSetup from './PreGameSetup';
@@ -30,7 +29,54 @@ import { GardenGame, CookingGame, JigsawGame, DetectiveGame, MonsterGame } from 
 
 import { getQuestionsForGrade } from '../../QuestionBank';
 
+// --- Error Boundary to prevent White Screen of Death ---
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("CRITICAL APP ERROR:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-red-50 flex items-center justify-center p-8 text-center font-sans text-red-900">
+          <div className="max-w-xl">
+            <h1 className="text-4xl font-black mb-4">⚠️ System Failure</h1>
+            <p className="text-lg font-bold mb-6">The arcade machine encountered a critical error.</p>
+            <div className="bg-white p-4 rounded-xl border-2 border-red-200 text-left overflow-auto max-h-64 shadow-sm mb-6">
+              <code className="text-xs font-mono break-all text-red-600">
+                {this.state.error?.toString()}
+              </code>
+            </div>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-red-600 hover:bg-red-700 text-white font-black py-4 px-8 rounded-xl shadow-lg transition-transform hover:scale-105 active:scale-95"
+            >
+              RESTART SYSTEM
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const App: React.FC = () => {
+  // Debug Log to verify mounting in Console
+  React.useEffect(() => {
+    console.log("App Component Mounted Successfully");
+  }, []);
+
   const [view, setView] = useState<'lobby' | 'setup' | 'game' | 'results'>('lobby');
   const [selectedGame, setSelectedGame] = useState<GameModeType | null>(null);
   const [student, setStudent] = useState<StudentProfile | null>(null);
@@ -38,17 +84,20 @@ const App: React.FC = () => {
   const [customQuestions, setCustomQuestions] = useState<Question[] | null>(null);
 
   const handleGameSelect = (mode: GameModeType) => {
+    console.log("Game Selected:", mode);
     setSelectedGame(mode);
     setView('setup');
   };
 
   const handleSetupComplete = (profile: StudentProfile, customQ?: Question[] | null) => {
+    console.log("Setup Complete for:", profile.name);
     setStudent(profile);
     setCustomQuestions(customQ || null);
     setView('game');
   };
 
   const handleGameOver = (result: GameState) => {
+    console.log("Game Over. Score:", result.score);
     setGameResult({
       ...result,
       history: [] 
@@ -149,31 +198,33 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {view === 'lobby' && <GameLobby onSelectGame={handleGameSelect} />}
-      
-      {view === 'setup' && selectedGame && (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-           <PreGameSetup 
-              onComplete={handleSetupComplete} 
-              gameTitle={selectedGame}
-           />
-        </div>
-      )}
+    <ErrorBoundary>
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        {view === 'lobby' && <GameLobby onSelectGame={handleGameSelect} />}
+        
+        {view === 'setup' && selectedGame && (
+          <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+             <PreGameSetup 
+                onComplete={handleSetupComplete} 
+                gameTitle={selectedGame}
+             />
+          </div>
+        )}
 
-      {view === 'game' && renderGame()}
+        {view === 'game' && renderGame()}
 
-      {view === 'results' && gameResult && student && (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-          <ResultsView 
-            result={gameResult} 
-            student={student} 
-            onReset={handleReplay} 
-            onHome={handleHome} 
-          />
-        </div>
-      )}
-    </div>
+        {view === 'results' && gameResult && student && (
+          <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+            <ResultsView 
+              result={gameResult} 
+              student={student} 
+              onReset={handleReplay} 
+              onHome={handleHome} 
+            />
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 };
 

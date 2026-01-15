@@ -64,7 +64,6 @@ interface NinjaSliceProps {
 
 // === CONSTANTS ===
 const GRAVITY = 0.15;
-const FRUIT_SIZE = 110;
 const SPAWN_INTERVAL = 5000; 
 
 const FRUIT_STYLES: FruitStyle[] = [
@@ -83,7 +82,6 @@ const FLAVOR_TEXT = {
 
 const MotionDiv = motion.div as any;
 
-// === MATH HELPERS ===
 const randomBetween = (min: number, max: number) => Math.random() * (max - min) + min;
 
 const lineIntersectsCircle = (x1: number, y1: number, x2: number, y2: number, cx: number, cy: number, r: number): boolean => {
@@ -126,10 +124,11 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
   const [resultText, setResultText] = useState('');
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [spawnedOptions, setSpawnedOptions] = useState<Set<number>>(new Set());
+  const [fruitSize, setFruitSize] = useState(110);
 
   const { playSound } = useSound();
 
-  // 1. Initialize Questions
+  // 1. Initialize
   useEffect(() => {
     if (customQuestions && customQuestions.length > 0) {
       setQuestions(customQuestions);
@@ -142,19 +141,31 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
     setCurrentIndex(0);
   }, [student, customQuestions]);
 
-  // 2. Handle Resize
+  // 2. Handle Resize with Safety
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
-        setContainerSize({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        });
+        const w = containerRef.current.clientWidth;
+        const h = containerRef.current.clientHeight;
+        // Safety: ensure non-zero dimensions
+        if (w > 0 && h > 0) {
+            setContainerSize({ width: w, height: h });
+            setFruitSize(w < 600 ? 80 : 110);
+        }
       }
     };
+    
+    // Initial call
     updateSize();
+    
+    // Polling fallback for initial render race conditions on slow devices
+    const timer = setTimeout(updateSize, 100);
+    
     window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    return () => {
+        window.removeEventListener('resize', updateSize);
+        clearTimeout(timer);
+    };
   }, []);
 
   // 3. Spawning Helper
@@ -164,13 +175,12 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
     const currentQ = questions[currentIndex];
     if (!currentQ) return;
     
-    // Choose index
     let optionIndex = forceOptionIndex;
     if (optionIndex === undefined) {
       const availableOptions = currentQ.options.map((_, i) => i).filter(i => !spawnedOptions.has(i));
       if (availableOptions.length === 0) {
         if (fruits.filter(f => !f.isSliced).length === 0) {
-             setSpawnedOptions(new Set()); // Reset to allow respawn
+             setSpawnedOptions(new Set()); 
         }
         return; 
       }
@@ -179,12 +189,12 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
 
     const style = FRUIT_STYLES[optionIndex % FRUIT_STYLES.length];
     
-    // Physics Init
     const spawnX = randomBetween(containerSize.width * 0.15, containerSize.width * 0.85);
-    const spawnY = containerSize.height + FRUIT_SIZE;
-    const targetX = randomBetween(containerSize.width * 0.3, containerSize.width * 0.7);
-    const velocityX = (targetX - spawnX) / 110; 
-    const velocityY = -randomBetween(13, 17);
+    const spawnY = containerSize.height + fruitSize;
+    const targetX = randomBetween(containerSize.width * 0.2, containerSize.width * 0.8);
+    
+    const velocityX = (targetX - spawnX) / 100; 
+    const velocityY = -(containerSize.height * 0.018 + randomBetween(0, 2)); 
 
     const newFruit: FruitData = {
       id: Math.random(),
@@ -204,52 +214,47 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
     setFruits(prev => [...prev, newFruit]);
     setSpawnedOptions(prev => new Set([...prev, optionIndex!]));
     
-    // Only play sound for manual spawns to avoid noise chaos on burst
     if (forceOptionIndex === undefined) playSound('click'); 
 
-  }, [containerSize, result, isPaused, questions, currentIndex, spawnedOptions, fruits, playSound]);
+  }, [containerSize, result, isPaused, questions, currentIndex, spawnedOptions, fruits, playSound, fruitSize]);
 
   // === BURST SPAWN EFFECT ===
   useEffect(() => {
-    if (!containerSize.width || questions.length === 0) return;
+    // Only spawn if container is ready and not collapsed
+    if (!containerSize.width || containerSize.height === 0 || questions.length === 0) return;
 
-    // HARD RESET of all physics objects
     setFruits([]);
     setSlicedHalves([]);
     setParticles([]);
     setSpawnedOptions(new Set());
     
-    // HARD RESET of Timers
-    lastSpawnRef.current = Date.now() + 2000; // Delay the loop spawner so burst happens first
+    lastSpawnRef.current = Date.now() + 2000; 
 
     const currentQ = questions[currentIndex];
     if (!currentQ) return;
     const totalOptions = currentQ.options.length;
 
-    // Trigger Burst
     for (let i = 0; i < totalOptions; i++) {
         setTimeout(() => {
-            // Check if game is still active for this question
             setResult(currentResult => {
                if (!currentResult) {
                  spawnFruit(i); 
                }
                return currentResult;
             });
-        }, i * 200); // 200ms delay between burst
+        }, i * 300); 
     }
 
-  }, [currentIndex, questions, containerSize.width]); // Trigger on Question Change
+  }, [currentIndex, questions, containerSize.width, containerSize.height]);
 
 
-  // 4. Interaction (Slice) Logic
+  // 4. Interaction Logic
   const handleSlice = useCallback((fruit: FruitData, sliceAngle: number) => {
     if (fruit.isSliced || result) return;
 
     const currentQ = questions[currentIndex];
     const isCorrect = fruit.optionIndex === currentQ.correctAnswer;
 
-    // Particles
     const newParticles: Particle[] = [];
     for (let i = 0; i < 20; i++) {
       newParticles.push({
@@ -266,7 +271,6 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
     }
     setParticles(prev => [...prev, ...newParticles]);
 
-    // Halves
     const halfVelocity = 5;
     const newHalves: SlicedHalf[] = [
       {
@@ -313,18 +317,9 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
     }
 
     setTimeout(() => {
-      // Game Over Check
       if (currentIndex + 1 >= questions.length) {
-         onGameOver({ 
-           score: score + (isCorrect ? 100 : 0), 
-           streak: 0, 
-           questionsAnswered: currentIndex + 1, 
-           correctAnswers: 0, 
-           timeElapsed: 0, 
-           level: 1 
-         });
+         onGameOver({ score: score + (isCorrect ? 100 : 0), streak: 0, questionsAnswered: currentIndex + 1, correctAnswers: 0, timeElapsed: 0, level: 1 });
       } else {
-        // Next Question
         setCurrentIndex(prev => prev + 1);
         setResult(null);
       }
@@ -335,8 +330,9 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
   // 5. Draw Blade
   const drawBladeTrail = useCallback(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const now = Date.now();
@@ -366,16 +362,14 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
 
   // 6. Physics Loop
   useEffect(() => {
-    if (isPaused) return; // PAUSE CHECK
+    if (isPaused || !containerSize.width) return; 
 
     const loop = (time: number) => {
-      // Loop Spawn (Only runs if burst is finished)
       if (time - lastSpawnRef.current > SPAWN_INTERVAL) {
         spawnFruit();
         lastSpawnRef.current = time;
       }
 
-      // Physics
       setFruits(prev => prev.map(f => {
          if (f.isSliced) return f;
          return {
@@ -385,7 +379,7 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
            velocityY: f.velocityY + GRAVITY,
            rotation: f.rotation + f.rotationSpeed
          };
-      }).filter(f => f.y < containerSize.height + 250)); // Allow to fall further before cleanup
+      }).filter(f => f.y < containerSize.height + 250));
 
       setSlicedHalves(prev => prev.map(h => ({
         ...h,
@@ -406,14 +400,13 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
 
       drawBladeTrail();
 
-      // Collisions
       if (isSlicingRef.current && slicePointsRef.current.length > 1) {
          const p1 = slicePointsRef.current[slicePointsRef.current.length - 2];
          const p2 = slicePointsRef.current[slicePointsRef.current.length - 1];
          const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180/Math.PI);
 
          fruits.forEach(fruit => {
-            if (!fruit.isSliced && lineIntersectsCircle(p1.x, p1.y, p2.x, p2.y, fruit.x, fruit.y, FRUIT_SIZE/2)) {
+            if (!fruit.isSliced && lineIntersectsCircle(p1.x, p1.y, p2.x, p2.y, fruit.x, fruit.y, fruitSize/2)) {
                handleSlice(fruit, angle);
             }
          });
@@ -425,24 +418,30 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isPaused, containerSize, spawnFruit, handleSlice, fruits, drawBladeTrail]);
+  }, [isPaused, containerSize, spawnFruit, handleSlice, fruits, drawBladeTrail, fruitSize]);
 
 
-  const handleInputStart = () => isSlicingRef.current = true;
-  const handleInputEnd = () => isSlicingRef.current = false;
+  // Unified Input Handling
+  const handleInputStart = (e: React.MouseEvent | React.TouchEvent) => {
+    isSlicingRef.current = true;
+    handleInputMove(e);
+  };
+
+  const handleInputEnd = () => {
+    isSlicingRef.current = false;
+  };
   
   const handleInputMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!containerRef.current || isPaused) return;
     const rect = containerRef.current.getBoundingClientRect();
     let x, y;
     
-    // Safety check for touches
     if ('touches' in e) {
       if (e.touches && e.touches.length > 0) {
         x = e.touches[0].clientX - rect.left;
         y = e.touches[0].clientY - rect.top;
       } else {
-        return; // No touches active
+        return; 
       }
     } else {
       x = (e as React.MouseEvent).clientX - rect.left;
@@ -473,10 +472,12 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full h-full bg-slate-900 overflow-hidden select-none touch-none cursor-crosshair ${isShaking ? 'animate-shake' : ''}`}
+      className={`relative w-full h-full min-h-screen bg-slate-900 overflow-hidden select-none touch-none cursor-crosshair ${isShaking ? 'animate-shake' : ''}`}
+      style={{ touchAction: 'none' }} // Crucial for mobile play
       onMouseDown={handleInputStart}
       onMouseMove={handleInputMove}
       onMouseUp={handleInputEnd}
+      onMouseLeave={handleInputEnd}
       onTouchStart={handleInputStart}
       onTouchMove={handleInputMove}
       onTouchEnd={handleInputEnd}
@@ -487,13 +488,16 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
         onResume={() => setIsPaused(false)}
       />
 
-      <canvas ref={canvasRef} width={containerSize.width} height={containerSize.height} className="absolute inset-0 z-30 pointer-events-none" />
+      {containerSize.width > 0 && containerSize.height > 0 && (
+        <canvas ref={canvasRef} width={containerSize.width} height={containerSize.height} className="absolute inset-0 z-30 pointer-events-none" />
+      )}
+      
       <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]"></div>
       
       {/* UI Overlay */}
-      <div className="absolute top-0 left-20 right-0 z-40 p-4 pointer-events-none">
-         <div className="flex justify-between items-start">
-             <div className="flex flex-col gap-2">
+      <div className="absolute top-0 left-0 right-0 z-40 p-4 pointer-events-none safe-area-top">
+         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+             <div className="flex flex-col gap-2 order-2 md:order-1 mt-2 md:mt-0">
                  <div className="bg-black/50 backdrop-blur text-yellow-400 px-4 py-2 rounded-xl border border-yellow-500/30 flex items-center gap-2">
                     <Star className="fill-yellow-400 w-5 h-5"/>
                     <span className="font-black text-2xl">{score}</span>
@@ -505,9 +509,9 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
                  )}
              </div>
 
-             <div className="bg-[#f3e5ab] text-slate-900 px-8 py-4 rounded shadow-2xl border-y-4 border-[#d4c59a] max-w-lg text-center transform -rotate-1">
+             <div className="bg-[#f3e5ab] text-slate-900 px-4 py-3 md:px-8 md:py-4 rounded shadow-2xl border-y-4 border-[#d4c59a] max-w-lg text-center transform -rotate-1 mx-auto order-1 md:order-2 w-full md:w-auto">
                  <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{currentQ.subject}</div>
-                 <h2 className="text-xl md:text-2xl font-black font-serif">"{currentQ.text}"</h2>
+                 <h2 className="text-base md:text-2xl font-black font-serif leading-tight">"{currentQ.text}"</h2>
              </div>
          </div>
       </div>
@@ -516,14 +520,14 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
       {fruits.map(f => !f.isSliced && (
           <div key={f.id} className="absolute flex items-center justify-center rounded-full shadow-2xl border-4 pointer-events-none"
             style={{
-              left: f.x - FRUIT_SIZE/2, top: f.y - FRUIT_SIZE/2,
-              width: FRUIT_SIZE, height: FRUIT_SIZE,
+              left: f.x - fruitSize/2, top: f.y - fruitSize/2,
+              width: fruitSize, height: fruitSize,
               backgroundColor: f.style.inner, borderColor: f.style.outer,
               transform: `rotate(${f.rotation}deg) scale(${f.scale})`, zIndex: 10
             }}
           >
              <div className="absolute top-3 left-3 w-1/3 h-1/6 bg-white/40 rounded-full -rotate-45" />
-             <span className="text-slate-900 font-black text-lg text-center leading-tight z-10 select-none" style={{ transform: `rotate(${-f.rotation}deg)` }}>
+             <span className="text-slate-900 font-black text-sm md:text-lg text-center leading-tight z-10 select-none px-2" style={{ transform: `rotate(${-f.rotation}deg)` }}>
                 {f.option}
              </span>
           </div>
@@ -533,8 +537,8 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
       {slicedHalves.map(h => (
          <div key={h.id} className="absolute overflow-hidden pointer-events-none"
            style={{
-             left: h.x - FRUIT_SIZE/2, top: h.y - FRUIT_SIZE/2,
-             width: FRUIT_SIZE, height: FRUIT_SIZE,
+             left: h.x - fruitSize/2, top: h.y - fruitSize/2,
+             width: fruitSize, height: fruitSize,
              transform: `rotate(${h.rotation}deg)`, opacity: h.life, zIndex: 5
            }}
          >
@@ -565,7 +569,7 @@ const NinjaSlice: React.FC<NinjaSliceProps> = ({ student, customQuestions, onGam
           <MotionDiv initial={{ opacity: 0, scale: 0.5, y: 50 }} animate={{ opacity: 1, scale: 1.2, y: 0 }} exit={{ opacity: 0 }}
             className={`absolute inset-0 flex items-center justify-center z-50 pointer-events-none ${result === 'correct' ? 'text-green-400' : 'text-red-500'}`}
           >
-            <h1 className="text-7xl font-black italic drop-shadow-2xl stroke-black">{resultText}</h1>
+            <h1 className="text-5xl md:text-7xl font-black italic drop-shadow-2xl stroke-black text-center px-4">{resultText}</h1>
           </MotionDiv>
         )}
       </AnimatePresence>

@@ -206,7 +206,10 @@ const RaceTrack: React.FC<RaceTrackProps> = ({ student, customQuestions, onGameO
   };
 
   return (
-    <div className="relative w-full h-full bg-sky-300 overflow-hidden font-sans select-none">
+    <div 
+      className="relative w-full h-full bg-sky-300 overflow-hidden font-sans select-none touch-none"
+      style={{ touchAction: 'none' }}
+    >
        <PauseMenu 
          onPause={() => setIsPaused(true)}
          onResume={() => setIsPaused(false)}
@@ -263,11 +266,11 @@ const RaceTrack: React.FC<RaceTrackProps> = ({ student, customQuestions, onGameO
                </div>
            </div>
 
-           <div className="bg-slate-900/80 w-32 h-32 rounded-full border-4 border-slate-700 relative flex items-center justify-center shadow-xl">
-               <div className="absolute bottom-4 text-xl font-black italic">{Math.round(speed)} <span className="text-xs font-normal text-slate-400">KM/H</span></div>
+           <div className="bg-slate-900/80 w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-slate-700 relative flex items-center justify-center shadow-xl">
+               <div className="absolute bottom-4 text-sm md:text-xl font-black italic">{Math.round(speed)} <span className="text-[8px] md:text-xs font-normal text-slate-400">KM/H</span></div>
                <Gauge size={24} className="absolute top-4 text-slate-500" />
                <MotionDiv 
-                 className="absolute w-1 h-12 bg-red-500 origin-bottom"
+                 className="absolute w-1 h-8 md:h-12 bg-red-500 origin-bottom"
                  style={{ bottom: '50%', left: 'calc(50% - 2px)' }}
                  animate={{ rotate: -120 + (speed / 240) * 240 }}
                />
@@ -275,7 +278,7 @@ const RaceTrack: React.FC<RaceTrackProps> = ({ student, customQuestions, onGameO
        </div>
 
        {/* Progress Bar */}
-       <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-md h-2 bg-slate-700 rounded-full overflow-hidden border border-white/20 z-50">
+       <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[90%] max-w-md h-2 bg-slate-700 rounded-full overflow-hidden border border-white/20 z-50">
            <MotionDiv 
              className="h-full bg-blue-500"
              style={{ width: `${(playerProgress / 1000) * 100}%` }}

@@ -73,16 +73,17 @@ const RoundTarget: React.FC<{
       whileHover={!disabled ? { scale: 1.05 } : {}}
       whileTap={!disabled ? { scale: 0.95 } : {}}
       className={`
-        group relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white shadow-lg flex items-center justify-center 
-        text-sm sm:text-base font-bold text-gray-800 transition-all duration-200 border-4
+        group relative w-full sm:w-28 sm:h-28 rounded-2xl sm:rounded-full bg-white shadow-lg flex items-center justify-center 
+        text-sm sm:text-base font-bold text-gray-800 transition-all duration-200 border-4 p-4 sm:p-0
         ${disabled ? 'cursor-default border-white' : 'hover:shadow-xl hover:border-indigo-200 cursor-pointer border-white'}
         ${isHit ? 'border-green-400 bg-green-50 text-green-700' : ''}
       `}
     >
-      <span className="z-10 px-2 text-center leading-tight line-clamp-3">{text}</span>
+      <span className="z-10 text-center leading-tight line-clamp-3 w-full">{text}</span>
 
       <span className={`
-        absolute -top-1 -right-1 w-8 h-8 text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm transition-colors
+        absolute -left-3 top-1/2 -translate-y-1/2 sm:-top-1 sm:-right-1 sm:left-auto sm:translate-y-0 
+        w-8 h-8 text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm transition-colors
         ${isHit ? 'bg-green-500 text-white' : 'bg-indigo-600 text-white group-hover:bg-indigo-500'}
       `}>
         {String.fromCharCode(65 + index)}
@@ -113,7 +114,7 @@ const SpikedTrap: React.FC<{
   onCrush: () => void;
 }> = ({ isFalling, ropeSnapped, onCrush }) => {
   return (
-    <div className="absolute left-[10%] sm:left-[15%] top-0 flex flex-col items-center z-20 pointer-events-none">
+    <div className="absolute left-[5%] sm:left-[15%] top-0 flex flex-col items-center z-20 pointer-events-none">
       <div className="relative">
         <AnimatePresence>
           {!ropeSnapped && (
@@ -157,7 +158,7 @@ const SpikedTrap: React.FC<{
 };
 
 const TrapBody: React.FC = () => (
-  <div className="relative filter drop-shadow-xl">
+  <div className="relative filter drop-shadow-xl transform scale-75 sm:scale-100 origin-top">
       <svg width="180" height="100" viewBox="0 0 220 120">
         <rect x="10" y="0" width="200" height="80" fill="#334155" stroke="#1e293b" strokeWidth="4" rx="4" />
         <path 
@@ -167,12 +168,10 @@ const TrapBody: React.FC = () => (
           strokeWidth="4" 
           strokeLinejoin="round"
         />
-        {/* Rivets */}
         <circle cx="30" cy="20" r="4" fill="#94a3b8" />
         <circle cx="190" cy="20" r="4" fill="#94a3b8" />
         <circle cx="30" cy="60" r="4" fill="#94a3b8" />
         <circle cx="190" cy="60" r="4" fill="#94a3b8" />
-        {/* Weight Text */}
         <text x="110" y="50" textAnchor="middle" fill="#94a3b8" fontSize="24" fontFamily="Arial" fontWeight="900" letterSpacing="2">
             1000kg
         </text>
@@ -187,7 +186,7 @@ const Stickman: React.FC<{
 }> = ({ isSquashed, isAiming, bowAngle }) => {
   return (
     <motion.div 
-      className="absolute left-[10%] sm:left-[15%] bottom-[15%] w-32 h-48 z-10 origin-bottom pointer-events-none"
+      className="absolute left-[5%] sm:left-[15%] bottom-[10%] sm:bottom-[15%] w-32 h-48 z-10 origin-bottom pointer-events-none transform scale-75 sm:scale-100"
       animate={isSquashed ? { scaleY: 0.1, scaleX: 1.5 } : {}}
     >
         {isSquashed && (
@@ -199,52 +198,27 @@ const Stickman: React.FC<{
             />
         )}
 
-        {/* Minimalist Black Stickman */}
         <svg width="100%" height="100%" viewBox="0 0 200 300" style={{ overflow: 'visible' }}>
-            {/* Legs - Profile Stance */}
-            {/* Back Leg */}
+            {/* Legs */}
             <line x1="100" y1="180" x2="70" y2="280" stroke="black" strokeWidth="8" strokeLinecap="round" />
-            {/* Front Leg */}
             <line x1="100" y1="180" x2="130" y2="280" stroke="black" strokeWidth="8" strokeLinecap="round" />
-            
-            {/* Torso */}
             <line x1="100" y1="180" x2="100" y2="80" stroke="black" strokeWidth="8" strokeLinecap="round" />
-            
-            {/* Head - Solid Circle */}
             <circle cx="100" cy="50" r="25" fill="black" />
 
-            {/* Rotating Upper Body Group (Arms + Bow) */}
+            {/* Rotating Upper Body */}
             <motion.g
                 initial={{ rotate: 0 }}
                 animate={{ rotate: isAiming ? bowAngle : 0 }}
                 style={{ transformBox: "fill-box", transformOrigin: "100px 80px" }}
             >
-                {/* Back Arm (Drawing string) - Bent */}
                 <polyline points="100,80 70,100 50,90" fill="none" stroke="black" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-
-                {/* Front Arm (Holding Bow) - Straight */}
                 <line x1="100" y1="80" x2="160" y2="90" stroke="black" strokeWidth="6" strokeLinecap="round" />
-                
-                {/* The Bow - Simple Curve */}
                 <path d="M160,30 Q130,90 160,150" fill="none" stroke="black" strokeWidth="6" strokeLinecap="round" />
-                
-                {/* The String - Drawn back */}
-                {/* Top to Nock to Bottom */}
                 <polyline points="160,30 50,90 160,150" fill="none" stroke="black" strokeWidth="1" />
-                
-                {/* The Arrow */}
                 <line x1="50" y1="90" x2="180" y2="90" stroke="black" strokeWidth="4" strokeLinecap="round" />
-                {/* Arrowhead */}
                 <path d="M180,90 L170,85 L170,95 Z" fill="black" />
             </motion.g>
         </svg>
-        
-        {/* Caption */}
-        {!isSquashed && (
-           <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold text-slate-400 whitespace-nowrap bg-white/80 px-2 py-1 rounded-full shadow-sm">
-             Aim Carefully 🎯
-           </div>
-        )}
     </motion.div>
   );
 };
@@ -266,7 +240,6 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
   const [flightPath, setFlightPath] = useState<Point[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const targetRefs = useRef<(HTMLDivElement | null)[]>([]);
   const { playSound } = useSound();
 
   const handleTargetClick = (index: number, e: React.MouseEvent) => {
@@ -284,24 +257,20 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
     };
 
     // Calculate Start Position (Stickman bow position)
-    // Stickman is at left: 15%, bottom: 15%
     const start = {
       x: containerRect.width * 0.15 + 60, 
       y: containerRect.height * 0.85 - 100 
     };
 
-    // Generate Curve
     const path = calculateFlightPath(start, end);
     setFlightPath(path);
     
     setSelectedTarget(index);
     setPhase('aiming');
 
-    // Aim Bow
     const angleRad = Math.atan2(end.y - start.y, end.x - start.x);
     setBowAngle((angleRad * 180 / Math.PI) - 10); 
 
-    // Shoot after delay
     setTimeout(() => {
         playSound('shoot');
         setPhase('shooting');
@@ -320,50 +289,40 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
               } else {
                   setPhase('death');
                   setTimeout(() => {
-                      playSound('wrong'); // Spikes crash sound
-                      // Continue game even if wrong
+                      playSound('wrong'); 
                       onComplete(false, 0);
                   }, 2500);
               }
-          }, 600); // Flight time matches animation duration
+          }, 600);
       }
   }, [phase, selectedTarget, question.correctAnswer, onComplete, playSound]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-slate-50">
        
-       {/* 🎯 QUESTION / MISSION CARD */}
+       {/* 🎯 QUESTION CARD */}
        <div className="absolute top-24 left-1/2 -translate-x-1/2 w-[90%] max-w-3xl z-40">
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             key={question.id}
-            className="bg-white rounded-[2rem] shadow-xl px-8 py-6 border border-white/50 backdrop-blur-sm relative"
+            className="bg-white rounded-2xl shadow-xl px-4 py-4 md:px-8 md:py-6 border border-white/50 backdrop-blur-sm relative"
           >
             <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-2 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-              Mission {questionNumber}
+              Level {questionNumber}
             </div>
 
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 leading-snug">
+            <h2 className="text-xl md:text-3xl font-bold text-slate-800 leading-snug">
               {question.text}
             </h2>
-
-            <div className="mt-4 flex gap-2">
-              <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold border border-indigo-100">
-                🧠 {question.subject || 'Logic'}
-              </span>
-              <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-bold border border-amber-100">
-                ⚡ Challenge
-              </span>
-            </div>
           </motion.div>
        </div>
 
-       {/* 🎯 ANSWER TARGETS (RIGHT SIDE) */}
-       <div className="absolute right-4 sm:right-12 top-1/2 transform -translate-y-1/2 flex flex-col gap-6 z-40 max-h-[60vh] justify-center">
+       {/* 🎯 ANSWER TARGETS */}
+       <div className="absolute right-4 top-[55%] transform -translate-y-1/2 flex flex-col gap-4 z-40 max-h-[60vh] w-48 sm:w-auto">
           {question.options.map((opt, idx) => (
-             <div key={idx} ref={(el) => { targetRefs.current[idx] = el; }}>
+             <div key={idx}>
                  <RoundTarget 
                     text={opt} 
                     index={idx}
@@ -375,7 +334,6 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
           ))}
        </div>
 
-       {/* GAME ELEMENTS */}
        <SpikedTrap 
           isFalling={phase === 'death'}
           ropeSnapped={phase === 'death'}
@@ -388,7 +346,7 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
           bowAngle={bowAngle}
        />
 
-       {/* ================= PROJECTILE ================= */}
+       {/* PROJECTILE */}
        {phase === 'shooting' && flightPath.length > 0 && (
            <motion.div
              className="absolute w-12 h-1 z-30 pointer-events-none"
@@ -409,7 +367,7 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
            </motion.div>
        )}
 
-       {/* FEEDBACK OVERLAYS */}
+       {/* FEEDBACK */}
        <AnimatePresence>
           {phase === 'hit' && (
             <div className="absolute inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center z-50">
@@ -420,7 +378,6 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
               >
                 <div className="text-6xl mb-4">✨</div>
                 <div className="text-3xl font-black text-emerald-600 mb-2">Perfect Shot!</div>
-                <div className="text-slate-500 font-bold">+100 XP • Bullseye</div>
               </motion.div>
             </div>
           )}
@@ -434,9 +391,8 @@ const TrapRoom: React.FC<TrapRoomProps> = ({
               >
                 <div className="text-6xl mb-4">🤕</div>
                 <div className="text-2xl font-black text-indigo-900 mb-2">Trap Sprung!</div>
-                <div className="text-slate-500">Careful! The spikes are fast.</div>
                 <div className="mt-4 text-xs font-bold text-red-400 bg-red-50 px-3 py-1 rounded-full inline-block">
-                   Continuing...
+                   Moving to next...
                 </div>
               </motion.div>
             </div>

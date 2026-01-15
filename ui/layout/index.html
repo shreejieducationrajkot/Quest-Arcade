@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Learning Quest Arcade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -34,6 +34,18 @@
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
       body {
         font-family: 'Inter', sans-serif;
+        overscroll-behavior: none; /* Prevent pull-to-refresh */
+      }
+      /* Prevent text selection */
+      .select-none {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      /* Safe area for notched phones */
+      .safe-area-top {
+        padding-top: env(safe-area-inset-top);
       }
     </style>
   <script type="importmap">

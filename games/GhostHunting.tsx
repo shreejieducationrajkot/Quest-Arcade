@@ -112,38 +112,48 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
     return () => cancelAnimationFrame(frameId);
   }, [isTransitioning, isPaused]);
 
-  // 4. Mouse Move & Flashlight Logic
-  const handleMouseMove = (e: React.MouseEvent) => {
+  // 4. Unified Input Handling (Touch & Mouse)
+  const handleInputMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!containerRef.current || isPaused) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let clientX, clientY;
+
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    }
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     setMousePos({ x, y });
 
     // EMF Calculation (Proximity to Correct Answer)
     if (questions.length > 0) {
         const correctGhost = ghosts.find(g => g.optionIndex === questions[currentIndex].correctAnswer);
         if (correctGhost) {
-            // Convert % to pixels roughly
             const gx = (correctGhost.x / 100) * rect.width;
             const gy = (correctGhost.y / 100) * rect.height;
             const dist = Math.hypot(gx - x, gy - y);
-            // Closer = Higher EMF (max 5)
-            const level = Math.max(1, Math.min(5, Math.floor(6 - (dist / 150))));
+            const maxDist = Math.min(250, rect.width * 0.5);
+            const level = Math.max(1, Math.min(5, Math.floor(6 - (dist / (maxDist / 3)))));
             setEmfLevel(level);
         }
     }
   };
 
   // 5. Fire Proton Beam
-  const handleFire = () => {
+  const handleInputStart = (e: React.MouseEvent | React.TouchEvent) => {
     if (isTransitioning || isFiring || isPaused) return;
+
+    handleInputMove(e);
 
     setIsFiring(true);
     setBeamTarget({ x: mousePos.x, y: mousePos.y });
-    playSound('click'); // Zap sound
+    playSound('click'); 
 
-    // Check Hit
     const container = containerRef.current;
     if (!container) return;
     
@@ -151,8 +161,8 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
     const clickYPct = (mousePos.y / container.clientHeight) * 100;
 
     const hitGhost = ghosts.find(g => 
-      Math.abs(g.x - clickXPct) < 8 && 
-      Math.abs(g.y - clickYPct) < 10
+      Math.abs(g.x - clickXPct) < 15 &&  // Forgiving hit box for mobile
+      Math.abs(g.y - clickYPct) < 15
     );
 
     setTimeout(() => {
@@ -181,7 +191,7 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
                 }
             }, 2000);
         }
-    }, 400); // Beam duration
+    }, 400); 
   };
 
   const handleRestart = () => {
@@ -199,9 +209,12 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
   return (
     <div 
       ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onClick={handleFire}
-      className="relative w-full h-full overflow-hidden bg-black cursor-none select-none font-mono"
+      onMouseMove={handleInputMove}
+      onTouchMove={handleInputMove}
+      onMouseDown={handleInputStart}
+      onTouchStart={handleInputStart}
+      className="relative w-full h-full overflow-hidden bg-black cursor-none select-none font-mono touch-none"
+      style={{ touchAction: 'none' }}
     >
       <PauseMenu 
         onPause={() => setIsPaused(true)}
@@ -210,8 +223,7 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
         onQuit={onExit || (() => {})}
       />
       
-      {/* === LAYER 1: SPOOKY WALLPAPER === */}
-      {/* This is only visible via the flashlight mask */}
+      {/* Background */}
       <div 
         className="absolute inset-0 z-0 bg-[#1a1a1a]"
         style={{
@@ -221,7 +233,7 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
         }}
       ></div>
 
-      {/* Random Red Eyes in the dark (Atmosphere) */}
+      {/* Eyes */}
       <div className="absolute top-[20%] left-[10%] opacity-20 animate-pulse">
           <div className="flex gap-2"><div className="w-2 h-2 bg-red-600 rounded-full shadow-[0_0_5px_red]"></div><div className="w-2 h-2 bg-red-600 rounded-full shadow-[0_0_5px_red]"></div></div>
       </div>
@@ -229,24 +241,20 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
           <div className="flex gap-2"><div className="w-2 h-2 bg-red-600 rounded-full shadow-[0_0_5px_red]"></div><div className="w-2 h-2 bg-red-600 rounded-full shadow-[0_0_5px_red]"></div></div>
       </div>
 
-
-      {/* === LAYER 2: DARKNESS OVERLAY (The Flashlight) === */}
+      {/* Flashlight Overlay */}
       <div 
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          background: `radial-gradient(circle 250px at ${mousePos.x}px ${mousePos.y}px, transparent 0%, rgba(0,0,0,0.98) 100%)`
+          background: `radial-gradient(circle 220px at ${mousePos.x}px ${mousePos.y}px, transparent 0%, rgba(0,0,0,0.98) 100%)`
         }}
       ></div>
 
-
-      {/* === LAYER 3: THE GHOSTS === */}
+      {/* Ghosts */}
       {ghosts.map((g) => {
-        // Only show ghost if near mouse (Flashlight Logic in JS for opacity)
-        // Calculate distance logic for opacity
         const gx = (g.x / 100) * (containerRef.current?.clientWidth || 1000);
         const gy = (g.y / 100) * (containerRef.current?.clientHeight || 800);
         const dist = Math.hypot(gx - mousePos.x, gy - mousePos.y);
-        const visibility = Math.max(0, 1 - (dist / 250)); // Visible within 250px radius
+        const visibility = Math.max(0, 1 - (dist / 220)); 
 
         return (
           <MotionDiv 
@@ -256,7 +264,7 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
               left: `${g.x}%`, 
               top: `${g.y}%`,
               transform: 'translate(-50%, -50%)',
-              opacity: visibility + 0.1 // Never fully invisible, just very faint
+              opacity: visibility + 0.1 
             }}
             animate={{ 
                 y: [0, -15, 0],
@@ -264,28 +272,20 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
             }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
-             {/* Ghost SVG */}
-             <div className="relative drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+             <div className="relative drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] transform scale-75 md:scale-100">
                 <svg width="100" height="100" viewBox="0 0 100 100" className="overflow-visible">
-                    {/* Glow Aura */}
                     <path d="M10,100 Q10,10 50,10 Q90,10 90,100" fill={GHOST_COLORS[g.id % GHOST_COLORS.length]} fillOpacity="0.1" filter="blur(10px)" />
-                    
-                    {/* Body */}
                     <path 
                         d="M20,100 Q20,20 50,20 Q80,20 80,100 L70,90 L60,100 L50,90 L40,100 L30,90 L20,100 Z" 
                         fill={GHOST_COLORS[g.id % GHOST_COLORS.length]} 
                         fillOpacity="0.8"
                     />
-                    {/* Eyes */}
                     <circle cx="40" cy="45" r="4" fill="#000" />
                     <circle cx="60" cy="45" r="4" fill="#000" />
-                    {/* Mouth (O shape) */}
                     <circle cx="50" cy="60" r="3" fill="#000" />
                 </svg>
-                
-                {/* Answer Text */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-8">
-                    <span className="bg-black/50 text-white px-2 py-1 rounded text-sm font-bold backdrop-blur-sm border border-white/20 whitespace-nowrap">
+                    <span className="bg-black/50 text-white px-2 py-1 rounded text-xs md:text-sm font-bold backdrop-blur-sm border border-white/20 whitespace-nowrap">
                         {g.text}
                     </span>
                 </div>
@@ -294,25 +294,19 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
         );
       })}
 
-
-      {/* === LAYER 4: HUD (EMF Reader) === */}
-      <div className="absolute top-0 left-0 right-0 p-4 z-40 flex flex-col items-center pointer-events-none">
-         
-         {/* Question Panel */}
-         <div className="bg-slate-900/90 border border-slate-600 px-6 py-4 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.8)] max-w-2xl text-center mb-4">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-200 tracking-wide font-sans">{currentQ.text}</h2>
+      {/* HUD */}
+      <div className="absolute top-0 left-0 right-0 p-4 z-40 flex flex-col items-center pointer-events-none safe-area-top">
+         <div className="bg-slate-900/90 border border-slate-600 px-4 py-3 md:px-6 md:py-4 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.8)] max-w-2xl text-center mb-4 w-[90%]">
+            <h2 className="text-lg md:text-2xl font-bold text-slate-200 tracking-wide font-sans leading-tight">{currentQ.text}</h2>
          </div>
-
-         {/* EMF & Stats */}
          <div className="flex gap-4 items-center bg-black/80 px-4 py-2 rounded-full border border-slate-700">
-            {/* EMF Meter */}
             <div className="flex items-center gap-2 border-r border-slate-600 pr-4">
                 <span className="text-xs text-slate-400 font-bold">EMF</span>
                 <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map(level => (
                         <div 
                             key={level} 
-                            className={`w-3 h-6 rounded-sm transition-all duration-200 ${
+                            className={`w-2 h-4 md:w-3 md:h-6 rounded-sm transition-all duration-200 ${
                                 emfLevel >= level 
                                 ? (level > 3 ? 'bg-red-500 shadow-[0_0_8px_red]' : 'bg-green-500 shadow-[0_0_5px_green]') 
                                 : 'bg-slate-800'
@@ -324,8 +318,7 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
          </div>
       </div>
 
-
-      {/* === LAYER 5: PROTON BEAM (Interaction) === */}
+      {/* Beam Animation */}
       <AnimatePresence>
         {isFiring && beamTarget && (
             <svg className="absolute inset-0 z-30 pointer-events-none overflow-visible">
@@ -338,32 +331,20 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
                         </feMerge>
                     </filter>
                 </defs>
-                
-                {/* The Beam */}
                 <MotionPath
                     initial={{ pathLength: 0, opacity: 1 }}
                     animate={{ pathLength: 1, opacity: [1, 0.5, 1] }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     d={`M${containerRef.current?.clientWidth! / 2},${containerRef.current?.clientHeight} L${beamTarget.x},${beamTarget.y}`}
-                    stroke="#fbbf24" // Amber/Proton color
-                    strokeWidth="6"
-                    fill="none"
-                    filter="url(#glow)"
-                    strokeLinecap="round"
+                    stroke="#fbbf24" strokeWidth="6" fill="none" filter="url(#glow)" strokeLinecap="round"
                 />
-                {/* Secondary Spiral Beam */}
                 <MotionPath
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
                     d={`M${containerRef.current?.clientWidth! / 2},${containerRef.current?.clientHeight} Q${beamTarget.x + 50},${beamTarget.y + 100} ${beamTarget.x},${beamTarget.y}`}
-                    stroke="#ef4444"
-                    strokeWidth="2"
-                    fill="none"
-                    className="animate-pulse"
+                    stroke="#ef4444" strokeWidth="2" fill="none" className="animate-pulse"
                 />
-                
-                {/* Impact Point */}
                 <MotionCircle 
                     cx={beamTarget.x} cy={beamTarget.y} r="20" 
                     fill="#fbbf24" filter="url(#glow)"
@@ -373,8 +354,7 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
         )}
       </AnimatePresence>
 
-
-      {/* === LAYER 6: RESULT OVERLAY === */}
+      {/* Result Overlay */}
       <AnimatePresence>
         {isTransitioning && (
           <MotionDiv 
@@ -386,12 +366,12 @@ const GhostHunt: React.FC<GhostHuntProps> = ({ student, customQuestions, onGameO
              {result === 'caught' ? (
                 <>
                     <Ghost size={80} className="text-green-400 mb-4 animate-bounce" />
-                    <h1 className="text-5xl font-black text-green-400 tracking-tighter drop-shadow-[0_0_15px_green]">ENTITY CAPTURED</h1>
+                    <h1 className="text-3xl md:text-5xl font-black text-green-400 tracking-tighter drop-shadow-[0_0_15px_green] text-center px-4">ENTITY CAPTURED</h1>
                 </>
              ) : (
                 <>
                     <Zap size={80} className="text-red-500 mb-4 animate-pulse" />
-                    <h1 className="text-5xl font-black text-red-500 tracking-tighter drop-shadow-[0_0_15px_red]">CONTAINMENT BREACH</h1>
+                    <h1 className="text-3xl md:text-5xl font-black text-red-500 tracking-tighter drop-shadow-[0_0_15px_red] text-center px-4">CONTAINMENT BREACH</h1>
                 </>
              )}
           </MotionDiv>

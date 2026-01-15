@@ -72,23 +72,23 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ question, onAnswer, s
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
         className={`
-          relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4
+          relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4
           ${showFeedback === 'correct' ? 'border-green-500' : showFeedback === 'wrong' ? 'border-red-500' : 'border-indigo-600'}
         `}
       >
         {/* Header Bar */}
-        <div className="bg-slate-50 p-4 flex justify-between items-center border-b border-slate-200">
+        <div className="bg-slate-50 p-3 md:p-4 flex justify-between items-center border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-              {question.subject} • {question.skill}
+            <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider truncate max-w-[120px] md:max-w-none">
+              {question.subject}
             </span>
             {streak > 1 && (
               <MotionDiv 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="flex items-center gap-1 text-orange-500 font-bold"
+                className="flex items-center gap-1 text-orange-500 font-bold text-sm"
               >
-                <Zap size={16} fill="currentColor" />
+                <Zap size={14} fill="currentColor" />
                 <span>{streak} Streak!</span>
               </MotionDiv>
             )}
@@ -96,7 +96,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ question, onAnswer, s
           <MotionDiv 
             animate={{ scale: timeLeft < 10 ? [1, 1.2, 1] : 1, color: timeLeft < 10 ? '#EF4444' : '#475569' }}
             transition={{ repeat: timeLeft < 10 ? Infinity : 0, duration: 0.5 }}
-            className="flex items-center gap-2 font-mono font-bold text-xl text-slate-600"
+            className="flex items-center gap-2 font-mono font-bold text-lg md:text-xl text-slate-600"
           >
             <Timer size={20} />
             {timeLeft}s
@@ -104,16 +104,16 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ question, onAnswer, s
         </div>
 
         {/* Question Body */}
-        <div className="p-8 text-center">
+        <div className="p-4 md:p-8 text-center max-h-[80vh] overflow-y-auto">
           <MotionH2 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="text-2xl md:text-3xl font-bold text-slate-800 mb-8 leading-tight"
+            className="text-xl md:text-3xl font-bold text-slate-800 mb-6 md:mb-8 leading-tight"
           >
             {question.text}
           </MotionH2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {question.options.map((option, idx) => {
               const isSelected = selectedOption === idx;
               const isCorrectAnswer = idx === question.correctAnswer;
@@ -135,12 +135,12 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ question, onAnswer, s
                   key={idx}
                   onClick={() => handleSelect(idx)}
                   disabled={selectedOption !== null}
-                  whileHover={selectedOption === null ? { scale: 1.02, y: -2 } : {}}
+                  whileHover={selectedOption === null ? { scale: 1.01, y: -2 } : {}}
                   whileTap={selectedOption === null ? { scale: 0.98 } : {}}
                   animate={selectedOption !== null && isCorrectAnswer ? { scale: [1, 1.05, 1], transition: { repeat: 2 } } : {}}
                   className={`
-                    p-6 rounded-xl text-lg font-bold shadow-sm relative overflow-hidden
-                    flex items-center justify-center transition-colors
+                    p-4 md:p-6 rounded-xl text-base md:text-lg font-bold shadow-sm relative overflow-hidden
+                    flex items-center justify-center transition-colors min-h-[60px] md:min-h-[80px]
                     ${btnClass}
                   `}
                 >
@@ -151,7 +151,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ question, onAnswer, s
                        animate={{ scale: 1 }}
                        className="absolute right-4 bg-white text-green-600 rounded-full p-1"
                      >
-                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
+                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
                      </MotionDiv>
                   )}
                 </MotionButton>
